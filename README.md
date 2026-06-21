@@ -1,115 +1,113 @@
-# CC-Loop — 自主循环编码引擎
+# CC-Loop — Autonomous Coding Loop Engine
 
-自主推进项目到目标的循环引擎。两种模式：单一工作者（solo，默认）和多角色协作（team）。
+An autonomous loop engine that drives projects toward goals. Two modes: a single worker (solo, default) or multi-agent collaboration (team).
 
-## 两种模式
+## Two Modes
 
-### Solo 模式（默认）
+### Solo Mode (Default)
 
-一个 worker 全权处理任务。自己理解项目、自己决策、自己执行、自己验证。
+A single worker handles the entire task — understanding the project, making decisions, executing changes, and verifying results autonomously.
 
-适用场景：
-- "审查这个项目，有 bug 就修，你来决定，不用汇报"
-- "研究这个算法哪里能提升 XXX"
-- "把这个项目的基准往上提 XXX"
+Best for:
+- "Review this project, fix any bugs you find — you decide, no need to report"
+- "Research how to improve XXX in this algorithm"
+- "Raise the benchmark of this project by XXX"
 
-特点：省去 planner 调度开销，worker 不被角色框死，自己判断该干什么。
+No planner overhead. The worker isn't constrained by role boundaries — it decides what to do.
 
-### Team 模式
+### Team Mode
 
-规划者（planner）每轮读状态、做决策、派角色。角色各司其职：
+A planner reads state each round, makes decisions, and dispatches roles:
 
 ```
-planner（调度）
-  → builder（改代码）
-  → critic（找问题，强制搜索）
-  → tester（写测试）
-  → reviewer（评估改动影响）
-  → innovator（提方案，强制搜索）
-  → searcher（搜外部资料，step-3.7-flash）
-gate（机械验证）
+planner (orchestration)
+  → builder (modify code)
+  → critic (find issues, mandatory search)
+  → tester (write tests)
+  → reviewer (assess change impact)
+  → innovator (propose solutions, mandatory search)
+  → searcher (search external resources, step-3.7-flash)
+gate (mechanical verification)
 ```
 
-适用场景：复杂任务、需要多视角深度协作、长迭代。
+Best for complex tasks requiring multiple perspectives, deep collaboration, or extended iteration.
 
-### 对比
+### Comparison
 
 | | solo | team |
 |---|---|---|
-| 决策 | worker 自己决定 | planner 调度 |
-| 每轮 LLM 调用 | 1 次 | 1-2 次（planner + worker） |
-| 独立视角 | 无（自己改自己审） | 有（critic/reviewer 独立审查） |
-| 适合 | 明确目标、中等复杂度 | 复杂、多维度、需要创新 |
+| Decision-making | worker decides | planner dispatches |
+| LLM calls per round | 1 | 1-2 (planner + worker) |
+| Independent review | none (self-review) | yes (critic/reviewer) |
+| Best for | clear goals, medium complexity | complex, multi-dimensional, innovation |
 
-## 用法
+## Usage
 
 ```bash
-# solo 模式（默认）
+# solo mode (default)
 bash engine/loop.sh scenarios/ai-memory-solo.conf
 
-# team 模式
+# team mode
 bash engine/loop.sh scenarios/ai-memory-fix.conf --mode team
 
-# 也可以在配置文件里指定 MODE="solo" 或 MODE="team"
-# 命令行 --mode 覆盖配置文件的 MODE
+# You can also set MODE="solo" or MODE="team" in the config file.
+# CLI --mode overrides config file MODE.
 ```
 
-命令行参数：
-- `--mode solo|team` — 覆盖模式
-- `--rounds N` — 覆盖最大轮数
+CLI arguments:
+- `--mode solo|team` — override mode
+- `--rounds N` — override max rounds
 
-## 人机协作（暂停/介入）
+## Human-in-the-Loop (Pause / Intervene)
 
-CC-Loop 运行时，用户随时可以通过创建信号文件介入：
+Users can intervene at any time by creating signal files:
 
 ```bash
-# 立即停止循环
+# Stop the loop immediately
 touch state/stop_signal
 
-# 暂停并注入指令（下一轮 worker/planner 会看到这个指令）
-echo "重点检查 _checkDup 方法的边界条件" > state/pause_signal
+# Inject a directive into the next round's prompt
+echo "Focus on edge cases in _checkDup" > state/pause_signal
 ```
 
-- `stop_signal`：当前轮结束后立即停止，进入最终验证
-- `pause_signal`：不停止，但把指令注入下一轮的 prompt（worker/planner 会看到"用户介入指令"）
-- 信号文件用完即删（一次性）
+- `stop_signal`: stops after the current round, runs final verification
+- `pause_signal`: doesn't stop, but injects the directive into the next round's prompt
+- Signal files are consumed once and deleted
 
-这让 CC-Loop 不是黑箱——用户可以随时纠偏、补充指令、或叫停。
+## Core Principles
 
+1. **Fully understand the project before acting** — every role must build a complete understanding before doing anything
+2. **Prompts describe goals, not methods** — tell the agent "what" and "what not to touch", never "how"
+3. **Full toolset, no handicapping** — workers have Read/Edit/Write/Bash/Glob/Grep + MCP search (planner is the exception: read-only + write decision)
+4. **Zero-trust mechanical verification** — all outputs pass through gate, no self-reporting trusted
+5. **Heterogeneous models** — search uses step-3.7-flash (lightweight), reasoning uses GLM-5.2[1m] (powerful)
 
+## Search Capability (MCP v3)
 
-1. **动手前先完整理解项目** — 每个角色工作前必须建立全局理解
-2. **prompt 描述目标，不描述方法** — 告诉"要什么"和"不能碰什么"，不告诉"怎么做"
-3. **完整工具，不阉割** — worker 有 Read/Edit/Write/Bash/Glob/Grep + MCP search（planner 例外：只读+写决策）
-4. **机械验证零信任** — 所有产出过 gate，不信自报
-5. **不同活用不同模型** — 搜索用 step-3.7-flash，推理用 GLM-5.2[1m]
+The `search` tool (cc-loop-search MCP) supports three modes:
+- **category**: fixed angle (latest/papers/projects/articles/pitfalls/comparison/tutorial/spec/general)
+- **focus**: free-form search angle description
+- **follow_up**: drill deeper based on previous results
 
-## 搜索能力（MCP v3）
+Each search automatically injects the current date to prevent the model from using stale knowledge as "latest".
 
-`search` 工具（cc-loop-search MCP），三种模式：
-- **category**：固定角度（latest/papers/projects/articles/pitfalls/comparison/tutorial/spec/general）
-- **focus**：自由描述搜索角度
-- **follow_up**：基于之前结果追问深入
+Mounting strategy:
+- solo worker: has MCP search (use as needed)
+- planner (team): no MCP (avoids initialization delay; dispatches searcher role when needed)
+- innovator/critic (team): mandatory search (search before acting)
+- builder/tester/reviewer (team): has MCP search (use as needed)
 
-每次自动注入当前日期（北京时间），避免模型用过期知识冒充"最新"。
+All roles use `--strict-mcp-config` to disable global MCP servers.
 
-挂载策略：
-- solo worker：有 MCP search（按需用）
-- planner（team）：不挂 MCP（避免初始化卡住，需搜索时派 searcher）
-- innovator/critic（team）：强制搜索（先搜再干）
-- builder/tester/reviewer（team）：有 MCP search（按需用）
+## Model Configuration
 
-所有角色用 `--strict-mcp-config` 禁用全局 MCP（智谱自带的 4 个 server 会拖慢启动）。
+### GLM-5.2[1m] (worker + planner)
 
-## 模型配置
-
-### GLM-5.2[1m]（worker + planner）
-
-`~/.claude/settings.json`：
+Configure `~/.claude/settings.json`:
 ```json
 {
   "env": {
-    "ANTHROPIC_AUTH_TOKEN": "<智谱 API Key>",
+    "ANTHROPIC_AUTH_TOKEN": "<Zhipu API Key>",
     "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.2[1m]",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.2[1m]",
@@ -120,70 +118,70 @@ echo "重点检查 _checkDup 方法的边界条件" > state/pause_signal
 }
 ```
 
-- `glm-5.2[1m]` 的 `[1m]` 开启 1M 上下文
-- 实测：109K token 精准，372K token 轻微衰减，1M 余量充足
-- 文档：https://docs.bigmodel.cn → Claude Code
-- 配置改后必须杀掉所有 claude 进程
+- The `[1m]` suffix enables 1M token context
+- Tested: 109K tokens precise, 372K tokens slight degradation, 1M headroom sufficient
+- Docs: https://docs.bigmodel.cn → Claude Code
+- Must kill all claude processes after changing config
 
-### step-3.7-flash（搜索）
+### step-3.7-flash (search)
 
 - API: `https://api.stepfun.com/step_plan/v1/chat/completions`
-- 256K 上下文，reasoning model（max_tokens 8000+）
-- 输入截断保护 100K 字符
+- 256K context, reasoning model (max_tokens 8000+)
+- Input truncation protection at 100K chars
 
-## 角色
+## Roles
 
-| 角色 | 模式 | 职责 | 模型 |
+| Role | Mode | Responsibility | Model |
 |---|---|---|---|
-| Solo Worker | solo | 全权处理，自主决策 | GLM-5.2 |
-| Planner | team | 循环内调度 | GLM-5.2 |
-| Builder | team | 改代码/实现 | GLM-5.2 |
-| Critic | team | 找问题（强制搜索） | GLM-5.2 |
-| Tester | team | 写测试 | GLM-5.2 |
-| Reviewer | team | 评估改动影响 | GLM-5.2 |
-| Innovator | team | 提方案（强制搜索） | GLM-5.2 |
-| Searcher | team | 搜外部资料 | step-3.7-flash |
-| Gate | 两者 | 机械验证 | 无 LLM |
+| Solo Worker | solo | Full autonomy, self-directed | GLM-5.2 |
+| Planner | team | In-loop orchestration | GLM-5.2 |
+| Builder | team | Modify code / implement | GLM-5.2 |
+| Critic | team | Find issues (mandatory search) | GLM-5.2 |
+| Tester | team | Write tests | GLM-5.2 |
+| Reviewer | team | Assess change impact | GLM-5.2 |
+| Innovator | team | Propose solutions (mandatory search) | GLM-5.2 |
+| Searcher | team | Search external resources | step-3.7-flash |
+| Gate | both | Mechanical verification | none |
 
-## 目录结构
+## Directory Structure
 
 ```
 cc-loop/
 ├── engine/
-│   ├── loop.sh           # 主入口（循环驱动 + solo/team 分支 + gate）
-│   ├── utils.sh         # 共享函数（log, render_prompt, run_agent, run_search, exec_*）
-│   ├── gate.sh          # 机械验证（test/benchmark/custom）
-│   ├── search_mcp.py    # 搜索 MCP v3（category/focus/follow_up）
-│   └── mcp_config.json  # MCP 挂载配置
+│   ├── loop.sh           # Main entry (loop driver + solo/team branching + gate)
+│   ├── utils.sh          # Shared functions (log, render_prompt, run_agent, run_search, exec_*)
+│   ├── gate.sh           # Mechanical verification (test/benchmark/custom)
+│   ├── search_mcp.py     # Search MCP v3 (category/focus/follow_up)
+│   └── mcp_config.json   # MCP mount config
 ├── roles/
-│   ├── solo.md          # 单一工作者
-│   ├── planner.md       # 规划者
-│   ├── builder.md       # 建设者
-│   ├── critic.md        # 挑刺者
-│   ├── tester.md        # 测试者
-│   ├── reviewer.md      # 审查者
-│   ├── innovator.md     # 创意者
-│   └── coordinator.md   # 统筹者（按需，执行器未实现）
+│   ├── solo.md           # Solo worker
+│   ├── planner.md        # Planner
+│   ├── builder.md        # Builder
+│   ├── critic.md         # Critic
+│   ├── tester.md         # Tester
+│   ├── reviewer.md       # Reviewer
+│   ├── innovator.md      # Innovator
+│   └── coordinator.md    # Coordinator (on-demand, executor not yet implemented)
 ├── scenarios/
-│   ├── ai-memory-solo.conf       # solo 模式示例
-│   ├── ai-memory-fix.conf        # team 修 bug
-│   ├── ai-memory-realbug.conf    # team 真 bug 测试
-│   └── ai-memory-innovate.conf   # team 创新优化
-├── state/               # 运行时状态（自动生成，不要提交）
+│   ├── ai-memory-solo.conf       # solo mode example
+│   ├── ai-memory-fix.conf        # team bug fix
+│   ├── ai-memory-realbug.conf    # team real bug test
+│   └── ai-memory-innovate.conf   # team innovation
+├── state/               # Runtime state (auto-generated, do not commit)
 └── docs/
-    └── ARCHITECTURE.md  # 架构设计文档
+    └── ARCHITECTURE.md  # Architecture design document
 ```
 
-## 状态文件
+## State Files
 
-| 文件 | 内容 |
+| File | Content |
 |---|---|
-| task.json | 任务目标 + 验证标准 |
-| progress.json | 当前轮次 + 上轮结果（每轮更新） |
-| decision.json | team 模式下 planner 的决策 |
-| history.jsonl | 每轮记录（jq 安全转义） |
-| result.json | worker 产出 |
-| search_result.md | 搜索结果累积 |
+| task.json | Task goal + verification criteria |
+| progress.json | Current round + last round result (updated each round) |
+| decision.json | Planner's decision (team mode) |
+| history.jsonl | Per-round record (jq-escaped) |
+| result.json | Worker output |
+| search_result.md | Accumulated search results |
 
 ## License
 
