@@ -1,4 +1,4 @@
-# LEA 架构设计
+# CC-Loop 架构设计
 
 > Loop Engine + Agents — 自主推进项目到目标的循环引擎
 
@@ -122,7 +122,7 @@
 | history.jsonl | 每轮完整记录 | 引擎（jq 转义） | 可选查询 |
 | result.json | 角色产出 | 各角色 | 引擎/gate |
 | search_result.md | 搜索结果 | searcher | innovator |
-| lea.log | 运行日志 | 引擎 | 调试 |
+| cc-loop.log | 运行日志 | 引擎 | 调试 |
 
 ## 设计原则
 

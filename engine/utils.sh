@@ -1,8 +1,8 @@
 #!/bin/bash
-# utils.sh — LEA 引擎共享函数
+# utils.sh — CC-Loop 引擎共享函数
 
 # ---- 日志（在 utils.sh 定义，避免单独 source 时 log: command not found）----
-log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "${STATE_DIR:-/tmp}/lea.log" 2>/dev/null || echo "[$(date '+%H:%M:%S')] $*"; }
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "${STATE_DIR:-/tmp}/cc-loop.log" 2>/dev/null || echo "[$(date '+%H:%M:%S')] $*"; }
 
 # ---- 字面 token 替换（不用 sed，安全处理特殊字符）----
 render_prompt() {
@@ -147,7 +147,7 @@ run_search() {
 heartbeat() { date +%s > "$STATE_DIR/heartbeat.txt" 2>/dev/null || true; }
 
 # ============ 角色执行器 ============
-# 注意：RESULT_FILE 在 lea.sh 里 STATE_DIR 定义后设置
+# 注意：RESULT_FILE 在 loop.sh 里 STATE_DIR 定义后设置
 
 exec_searcher() {
     local query="$1"

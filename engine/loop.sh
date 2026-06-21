@@ -1,6 +1,6 @@
 #!/bin/bash
-# lea.sh — LEA 循环引擎主入口
-# 用法: bash lea.sh <任务配置文件>
+# loop.sh — CC-Loop 循环引擎主入口
+# 用法: bash loop.sh <任务配置文件>
 #
 # 任务配置文件定义:
 #   PROJECT_DIR     — 项目目录
@@ -13,19 +13,19 @@
 #   SEARCH_MODEL     — 搜索者用的轻量模型（默认同 MODEL）
 set -uo pipefail
 
-LEA_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-ENGINE_DIR="$LEA_DIR/engine"
-ROLES_DIR="$LEA_DIR/roles"
-STATE_DIR_DEFAULT="$LEA_DIR/state"
+CCLOOP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ENGINE_DIR="$CCLOOP_DIR/engine"
+ROLES_DIR="$CCLOOP_DIR/roles"
+STATE_DIR_DEFAULT="$CCLOOP_DIR/state"
 
 # ---- 加载辅助函数 ----
 source "$ENGINE_DIR/utils.sh"    # render_prompt, run_agent, run_search, generate_repo_map
 source "$ENGINE_DIR/gate.sh"     # gate_verify（场景可插拔）
 
 # ---- 加载任务配置 ----
-CONFIG_FILE="${1:?用法: lea.sh <任务配置文件> [--mode solo|team]}"
+CONFIG_FILE="${1:?用法: loop.sh <任务配置文件> [--mode solo|team]}"
 if [ ! -f "$CONFIG_FILE" ]; then
-    CONFIG_FILE="$LEA_DIR/scenarios/$1"
+    CONFIG_FILE="$CCLOOP_DIR/scenarios/$1"
 fi
 source "$CONFIG_FILE"
 
@@ -96,7 +96,7 @@ EOF
 # ---- 主循环 ----
 init_state
 log "============================================"
-log "  LEA 启动"
+log "  CC-Loop 启动"
 log "  目标: $GOAL"
 log "  项目: $PROJECT_DIR"
 log "  验证: $VERIFY_TYPE — $VERIFY_CMD"
@@ -217,7 +217,7 @@ while [ $ROUND -lt $MAX_ROUNDS ]; do
             if [ "$GATE_STATUS" = "accept" ]; then
                 log "[gate] ✓ 通过 — $GATE_DETAIL"
                 gate_git "$PROJECT_DIR" add -A
-                gate_git "$PROJECT_DIR" -c user.email=lea@local -c user.name=lea commit -q -m "round $ROUND: $ROLE $ACTION" 2>/dev/null
+                gate_git "$PROJECT_DIR" -c user.email=cc-loop@local -c user.name=cc-loop commit -q -m "round $ROUND: $ROLE $ACTION" 2>/dev/null
                 NO_PROGRESS_COUNT=0
             else
                 log "[gate] ✗ 回滚 — $GATE_DETAIL"

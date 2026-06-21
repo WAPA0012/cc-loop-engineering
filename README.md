@@ -1,4 +1,4 @@
-# LEA — Loop Engine + Agents
+# CC-Loop — 自主循环编码引擎
 
 自主推进项目到目标的循环引擎。两种模式：单一工作者（solo，默认）和多角色协作（team）。
 
@@ -45,10 +45,10 @@ gate（机械验证）
 
 ```bash
 # solo 模式（默认）
-bash engine/lea.sh scenarios/ai-memory-solo.conf
+bash engine/loop.sh scenarios/ai-memory-solo.conf
 
 # team 模式
-bash engine/lea.sh scenarios/ai-memory-fix.conf --mode team
+bash engine/loop.sh scenarios/ai-memory-fix.conf --mode team
 
 # 也可以在配置文件里指定 MODE="solo" 或 MODE="team"
 # 命令行 --mode 覆盖配置文件的 MODE
@@ -60,7 +60,7 @@ bash engine/lea.sh scenarios/ai-memory-fix.conf --mode team
 
 ## 人机协作（暂停/介入）
 
-LEA 运行时，用户随时可以通过创建信号文件介入：
+CC-Loop 运行时，用户随时可以通过创建信号文件介入：
 
 ```bash
 # 立即停止循环
@@ -74,7 +74,7 @@ echo "重点检查 _checkDup 方法的边界条件" > state/pause_signal
 - `pause_signal`：不停止，但把指令注入下一轮的 prompt（worker/planner 会看到"用户介入指令"）
 - 信号文件用完即删（一次性）
 
-这让 LEA 不是黑箱——用户可以随时纠偏、补充指令、或叫停。
+这让 CC-Loop 不是黑箱——用户可以随时纠偏、补充指令、或叫停。
 
 
 
@@ -86,7 +86,7 @@ echo "重点检查 _checkDup 方法的边界条件" > state/pause_signal
 
 ## 搜索能力（MCP v3）
 
-`search` 工具（lea-search MCP），三种模式：
+`search` 工具（cc-loop-search MCP），三种模式：
 - **category**：固定角度（latest/papers/projects/articles/pitfalls/comparison/tutorial/spec/general）
 - **focus**：自由描述搜索角度
 - **follow_up**：基于之前结果追问深入
@@ -148,9 +148,9 @@ echo "重点检查 _checkDup 方法的边界条件" > state/pause_signal
 ## 目录结构
 
 ```
-lea/
+cc-loop/
 ├── engine/
-│   ├── lea.sh           # 主入口（循环驱动 + solo/team 分支 + gate）
+│   ├── loop.sh           # 主入口（循环驱动 + solo/team 分支 + gate）
 │   ├── utils.sh         # 共享函数（log, render_prompt, run_agent, run_search, exec_*）
 │   ├── gate.sh          # 机械验证（test/benchmark/custom）
 │   ├── search_mcp.py    # 搜索 MCP v3（category/focus/follow_up）

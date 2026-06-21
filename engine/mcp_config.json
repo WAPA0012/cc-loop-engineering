@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "lea-search": {
+    "cc-loop-search": {
       "command": "python3",
-      "args": ["/mnt/d/桌面文件夹/lea/engine/search_mcp.py"]
+      "args": ["/mnt/d/桌面文件夹/cc-loop/engine/search_mcp.py"]
     }
   }
 }

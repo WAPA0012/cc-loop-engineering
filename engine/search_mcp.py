@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LEA Search MCP Server v3
+CC-Loop Search MCP Server v3
 - 固定基础角度（latest/papers/projects）+ 自由角度（focus）+ 追问（follow_up）
 - 每次注入当前日期
 - 单工具，三个参数：query + focus(可选) + follow_up(可选)
@@ -151,7 +151,7 @@ def handle_request(req: dict) -> dict:
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "lea-search", "version": "3.0.0"},
+                "serverInfo": {"name": "cc-loop-search", "version": "3.0.0"},
             },
         }
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# gate.sh — LEA 机械验证（场景可插拔）
+# gate.sh — CC-Loop 机械验证（场景可插拔）
 #
 # gate_verify <type> <cmd> <project_dir> <success_criteria> <state_dir>
 # 输出: 第一行 accept|reject，后续行是详情

@@ -27,7 +27,7 @@
 
 - 需要审查代码？自己读、自己分析
 - 发现问题了？自己定位根因、自己修
-- 需要搜外部资料？用 `search` 工具（lea-search MCP），不要用其他搜索工具
+- 需要搜外部资料？用 `search` 工具（cc-loop-search MCP），不要用其他搜索工具
 - 环境出问题（依赖缺、编译失败）？自己搞定
 - 需要写测试验证？自己写、自己跑
 - 改完不确定对不对？自己跑测试看结果
@@ -44,7 +44,7 @@
 
 ## 关于搜索工具
 
-需要搜外部资料时，用 `search` 工具（lea-search MCP），不要用其他搜索工具（如智谱的 web search）。支持：
+需要搜外部资料时，用 `search` 工具（cc-loop-search MCP），不要用其他搜索工具（如智谱的 web search）。支持：
 - `category`：固定角度（latest/papers/projects/articles/pitfalls/comparison/tutorial/spec）
 - `focus`：自由描述搜索角度
 - `follow_up`：基于之前结果追问深入
