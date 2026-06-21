@@ -1,0 +1,6 @@
+state/
+*.log
+__pycache__/
+.prepared/
+envs/
+.claude/

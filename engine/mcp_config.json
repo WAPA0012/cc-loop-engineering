@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lea-search": {
+      "command": "python3",
+      "args": ["/mnt/d/桌面文件夹/lea/engine/search_mcp.py"]
+    }
+  }
+}
