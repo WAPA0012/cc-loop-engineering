@@ -34,10 +34,10 @@
 
 **你必须先搜索再提方案。** 不搜索就提的"创意"只是你已有知识的复述，不是真正的创新。
 
-用 `search` 工具（cc-loop-search MCP）搜，不要用其他搜索工具（如智谱的 web search）。cc-loop-search 走轻量模型，快且结构化。**每次搜索会自动注入当前日期，确保时效性。**
+用 `search` 工具（cc-loop-search MCP）搜，不要用其他搜索工具（如智谱的 web search）。cc-loop-search 是**真联网检索**（非模型记忆），返回带真实 URL 和发布时间的结果。
 
 **不要一次搜完——分角度多次搜索，覆盖更全面：**
-- `category: latest` — 这个领域的最新进展（2025-2026）
+- `category: latest` — 这个领域的最新进展
 - `category: papers` — 学术论文（原理、方法）
 - `category: projects` — 开源项目（现成实现）
 - `category: articles` — 技术文章（实践经验、踩坑）

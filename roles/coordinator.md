@@ -17,7 +17,7 @@
 
 ## 关于搜索工具
 
-当你需要搜索外部资料（行业最佳实践、类似项目的验收标准）时，**用 `search` 工具（cc-loop-search MCP）**，不要用其他搜索工具（如智谱的 web search）。cc-loop-search 走轻量模型，快且结构化。
+当你需要搜索外部资料（行业最佳实践、类似项目的验收标准）时，**用 `search` 工具（cc-loop-search MCP）**，不要用其他搜索工具（如智谱的 web search）。cc-loop-search 是真联网检索，返回带真实 URL 的结构化结果。
 
 ## 输出
 

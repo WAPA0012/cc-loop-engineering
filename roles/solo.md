@@ -44,10 +44,10 @@
 
 ## 关于搜索工具
 
-需要搜外部资料时，用 `search` 工具（cc-loop-search MCP），不要用其他搜索工具（如智谱的 web search）。支持：
+需要搜外部资料时，用 `search` 工具（cc-loop-search MCP），不要用其他搜索工具（如智谱的 web search）。cc-loop-search 是真联网检索，返回带真实 URL 和发布时间的结果。支持：
 - `category`：固定角度（latest/papers/projects/articles/pitfalls/comparison/tutorial/spec）
 - `focus`：自由描述搜索角度
-- `follow_up`：基于之前结果追问深入
+- `follow_up`：基于之前结果换更聚焦的词再搜
 
 **搜完后自己消化综合**——不要原样照搬搜索结果，要结合项目实际情况判断哪些能用、哪些不适用、怎么落地。搜索是输入，你的判断才是产出。
 

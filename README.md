@@ -26,7 +26,7 @@ planner (orchestration)
   → tester (write tests)
   → reviewer (assess change impact)
   → innovator (propose solutions, mandatory search)
-  → searcher (search external resources, step-3.7-flash)
+  → searcher (search external resources, real web search)
 gate (mechanical verification)
 ```
 
@@ -80,16 +80,18 @@ echo "Focus on edge cases in _checkDup" > state/pause_signal
 2. **Prompts describe goals, not methods** — tell the agent "what" and "what not to touch", never "how"
 3. **Full toolset, no handicapping** — workers have Read/Edit/Write/Bash/Glob/Grep + MCP search (planner is the exception: read-only + write decision)
 4. **Zero-trust mechanical verification** — all outputs pass through gate, no self-reporting trusted
-5. **Heterogeneous models** — search uses step-3.7-flash (lightweight), reasoning uses GLM-5.2[1m] (powerful)
+5. **Heterogeneous models** — search uses real web search (stepfun plan MCP channel) + step-3.7-flash structuring, reasoning uses GLM-5.2[1m] (powerful)
 
-## Search Capability (MCP v3)
+## Search Capability (MCP v4)
 
 The `search` tool (cc-loop-search MCP) supports three modes:
 - **category**: fixed angle (latest/papers/projects/articles/pitfalls/comparison/tutorial/spec/general)
 - **focus**: free-form search angle description
 - **follow_up**: drill deeper based on previous results
 
-Each search automatically injects the current date to prevent the model from using stale knowledge as "latest".
+Each search performs **real web retrieval** (not model memory) via the stepfun StepSearch MCP (the `step_plan` plan channel, billed to your plan's monthly Credit), then structures the real results with step-3.7-flash. Results carry real URLs and publish times — no fabricated content.
+
+> Note: the stepfun plan search endpoint is `https://api.stepfun.com/step_plan/v1/mcp/web_search/mcp`. Do **not** use the standard `https://api.stepfun.com/v1/search` — that's a separate paid endpoint billed to recharge balance, not plan quota.
 
 Mounting strategy:
 - solo worker: has MCP search (use as needed)
@@ -123,10 +125,11 @@ Configure `~/.claude/settings.json`:
 - Docs: https://docs.bigmodel.cn → Claude Code
 - Must kill all claude processes after changing config
 
-### step-3.7-flash (search)
+### step-3.7-flash (search structuring) + stepfun StepSearch MCP
 
-- API: `https://api.stepfun.com/step_plan/v1/chat/completions`
-- 256K context, reasoning model (max_tokens 8000+)
+- **Real retrieval**: stepfun StepSearch MCP (`web_search` tool) via the `step_plan` plan channel — billed to plan monthly Credit
+- **Structuring**: step-3.7-flash reorganizes the real results into a clean list (does NOT fabricate)
+- Configurable via env vars in `search_mcp.py`: `SEARCH_API_KEY` / `SEARCH_MCP_URL` / `SEARCH_MODEL` / `SEARCH_LLM_URL`
 - Input truncation protection at 100K chars
 
 ## Roles
@@ -140,7 +143,7 @@ Configure `~/.claude/settings.json`:
 | Tester | team | Write tests | GLM-5.2 |
 | Reviewer | team | Assess change impact | GLM-5.2 |
 | Innovator | team | Propose solutions (mandatory search) | GLM-5.2 |
-| Searcher | team | Search external resources | step-3.7-flash |
+| Searcher | team | Search external resources (real web search) | stepfun Search + step-3.7-flash |
 | Gate | both | Mechanical verification | none |
 
 ## Directory Structure
@@ -151,7 +154,7 @@ cc-loop/
 │   ├── loop.sh           # Main entry (loop driver + solo/team branching + gate)
 │   ├── utils.sh          # Shared functions (log, render_prompt, run_agent, run_search, exec_*)
 │   ├── gate.sh           # Mechanical verification (test/benchmark/custom)
-│   ├── search_mcp.py     # Search MCP v3 (category/focus/follow_up)
+│   ├── search_mcp.py     # Search MCP v4 (real web search + structuring)
 │   └── mcp_config.json   # MCP mount config
 ├── roles/
 │   ├── solo.md           # Solo worker

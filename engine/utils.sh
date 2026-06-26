@@ -95,52 +95,25 @@ run_agent() {
     return 1
 }
 
-# ---- 调用搜索者（轻量模型：step-3.7-flash）----
+# ---- 调用搜索者（stepfun 真联网检索 + step-3.7-flash 结构化整理）----
+# 统一走 search_mcp.py 的 do_search，与各角色在循环内调用的 search MCP 工具是同一套实现。
 # 参数: query [category_or_focus]  支持 category 或自由 focus 文本
 run_search() {
     local query="$1"
     local arg2="${2:-}"
-    local api_url="${SEARCH_API_URL:-https://api.stepfun.com/step_plan/v1/chat/completions}"
-    local api_key="${SEARCH_API_KEY:-Jh9uEG2u3K5U4KEJq2CsRNw0dfobIhWaQ65GxrAiynIP21GsLXYjeENJb2aqhOi8}"
-    local model="${SEARCH_MODEL:-step-3.7-flash}"
-    local now_date
-    now_date=$(TZ='Asia/Shanghai' date '+%Y年%m月%d日')
-
-    # 构造 prompt（注入日期 + 按 category 或自由 focus）
-    local prefix
+    # 判断 arg2 是固定 category 还是自由 focus
+    local category="general" focus=""
     case "$arg2" in
-        latest)   prefix="当前日期：${now_date}。\n搜索最新进展（2025-2026），标注时效性。\n\n" ;;
-        papers)   prefix="当前日期：${now_date}。\n搜学术论文（arxiv/顶会）。\n\n" ;;
-        projects) prefix="当前日期：${now_date}。\n搜开源项目（GitHub，活跃/star高）。\n\n" ;;
-        articles) prefix="当前日期：${now_date}。\n搜技术文章/博客/实践。\n\n" ;;
-        pitfalls) prefix="当前日期：${now_date}。\n搜已知问题/陷阱/漏洞/废弃警告。\n\n" ;;
-        comparison) prefix="当前日期：${now_date}。\n搜对比分析/选型/benchmark。\n\n" ;;
-        tutorial) prefix="当前日期：${now_date}。\n搜教程/API文档/用法示例。\n\n" ;;
-        spec)     prefix="当前日期：${now_date}。\n搜标准/规范/RFC/设计原则。\n\n" ;;
-        "")       prefix="当前日期：${now_date}。\n综合搜索。\n\n" ;;
-        *)        prefix="当前日期：${now_date}。\n从以下角度搜索：${arg2}\n\n" ;;  # 自由 focus
+        latest|papers|projects|articles|pitfalls|comparison|tutorial|spec|general|"")
+            category="${arg2:-general}"
+            ;;
+        *)
+            focus="$arg2"
+            ;;
     esac
-
-    local payload
-    payload=$(jq -n \
-        --arg q "${prefix}主题：${query}\n\n整理成列表，每条：标题、URL、摘要、相关性。" \
-        --arg m "$model" \
-        '{model: $m, messages: [{role:"user", content: $q}], max_tokens: 8000, temperature: 0.3}')
-
-    local resp
-    resp=$(curl -sS --max-time 90 \
-        -X POST "$api_url" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $api_key" \
-        -d "$payload" 2>&1) || true
-
-    local content
-    content=$(echo "$resp" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
-    if [ -z "$content" ]; then
-        echo "(搜索失败: $(echo "$resp" | jq -r '.error.message // "unknown"' 2>/dev/null || echo "$resp" | head -1))"
-    else
-        echo "$content"
-    fi
+    # 直接调用 search_mcp.py 的 do_search（真联网 + LLM 整理）
+    # key/URL/model 由 search_mcp.py 自行读环境变量，此处不传空值（避免覆盖默认值）
+    python "$ENGINE_DIR/search_mcp.py" --once "$query" "$category" "$focus" 2>/dev/null
 }
 
 # ---- 心跳 ----

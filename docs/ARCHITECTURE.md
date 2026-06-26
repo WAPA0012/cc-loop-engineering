@@ -8,7 +8,7 @@
 2. **prompt 描述目标，不描述方法** — 告诉角色"要什么"和"不能碰什么"，绝不告诉它"怎么做"
 3. **完整工具，不阉割** — worker 拥有完整工具集（Read/Edit/Write/Bash/Glob/Grep），职责边界靠 prompt 约束
 4. **机械验证零信任** — 所有产出过 gate（机械、确定性），不信任自报
-5. **不同活用不同模型** — 搜索用轻量 API（step-3.7-flash），推理用强模型（GLM-5.2[1m]）
+5. **不同活用不同模型** — 搜索用真联网检索（stepfun StepSearch MCP，走套餐 Credit）+ step-3.7-flash 整理，推理用强模型（GLM-5.2[1m]）
 
 ## 角色
 
@@ -29,11 +29,11 @@
 - 上下文管理：每轮独立调用（无状态），读状态文件不累积 session
 
 **搜索者（Searcher）** — 被 planner 派时启动
-- 模型：step-3.7-flash（轻量，256K context）
-- 调用方式：直接 API（`run_search`），不走 claude -p
+- 实现：调用 `search_mcp.py` 的 `do_search`（真联网检索 + 结构化整理），与各角色 MCP 工具共用同一套
+- 调用方式：bash `run_search` → `python search_mcp.py --once`
 - 工具：无（它本身就是工具，被引擎调用）
 - 职责：按角度搜索外部资料，结果存入 search_result.md
-- 支持三种模式：category（固定角度）/ focus（自由角度）/ follow_up（追问深入）
+- 支持三种模式：category（固定角度）/ focus（自由角度）/ follow_up（换更聚焦的词再搜）
 
 **创意者（Innovator）** — 被 planner 派时启动
 - 模型：GLM-5.2
@@ -94,14 +94,16 @@
 
 角色派发由 planner 自主决策，不是固定流程。planner 根据当前状态判断什么最该做。
 
-## 搜索 MCP（v3）
+## 搜索 MCP（v4）
 
 `engine/search_mcp.py` — stdio MCP server，对外暴露 `search` 工具：
 - **category**：8 个固定角度（latest/papers/projects/articles/pitfalls/comparison/tutorial/spec）
 - **focus**：自由描述搜索角度（覆盖 category）
-- **follow_up**：基于之前结果的追问深入
-- 每次注入当前日期（北京时间）
-- 内部调 step-3.7-flash API（OpenAI 兼容格式）
+- **follow_up**：换更聚焦的词再搜一次
+- **真联网检索**：调 stepfun StepSearch MCP（走 `step_plan` 套餐通道，消耗月度 Credit），返回真实 URL/发布时间/正文，不依赖模型记忆
+- **结构化整理**：检索结果交 step-3.7-flash 整理成列表（仅基于真实结果，绝不编造）
+- ⚠️ 不要用标准 `POST /v1/search`——那是付费端点，消耗充值余额而非套餐额度
+- key/URL/model 通过环境变量配置（`SEARCH_API_KEY`/`SEARCH_MCP_URL`/`SEARCH_MODEL`/`SEARCH_LLM_URL`），默认值内置
 
 挂载策略：
 - Planner 不挂（避免 MCP 初始化卡住）
@@ -132,5 +134,5 @@
 | 目标导向 | prompt 说"要什么"，不说"怎么做" |
 | 完整工具 | worker 有 Read/Edit/Write/Bash/Glob/Grep（planner 例外：只读+写决策） |
 | 零信任 | gate 机械验证，不信 LLM 自报 |
-| 异构模型 | 搜索 step-3.7-flash，推理 GLM-5.2[1m] |
+| 异构模型 | 搜索 = 真联网检索 + step-3.7-flash 整理，推理 GLM-5.2[1m] |
 | 状态外置 | planner 读 progress.json，不靠 session 累积（防爆） |

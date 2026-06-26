@@ -39,7 +39,7 @@
 
 ## 关于搜索工具
 
-遇到不熟悉的库/API/技术，需要查用法或解决方案时，用 `search` 工具（cc-loop-search MCP），不要用其他搜索工具。
+遇到不熟悉的库/API/技术，需要查用法或解决方案时，用 `search` 工具（cc-loop-search MCP），不要用其他搜索工具。cc-loop-search 是真联网检索。
 
 ## 输出
 
