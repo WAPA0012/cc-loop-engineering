@@ -13,10 +13,15 @@ import urllib.request
 from datetime import datetime, timezone, timedelta
 
 
-# ---- 可配置项（优先读环境变量，便于换 key / 换套餐 / 轮换密钥）----
-# 用 `or` 兜底：当环境变量被显式设为空字符串时也回退到默认值（os.environ.get 遇到空串会返回空串而非默认值）
-API_KEY = os.environ.get("SEARCH_API_KEY", "") or \
-    "Jh9uEG2u3K5U4KEJq2CsRNw0dfobIhWaQ65GxrAiynIP21GsLXYjeENJb2aqhOi8"
+# ---- 可配置项（全部读环境变量，密钥不写死在代码里）----
+# 用 `or` 兜底：当环境变量被显式设为空字符串时也回退到默认值
+# ⚠️ API Key 必须通过环境变量 SEARCH_API_KEY 提供，不设则搜索功能不可用
+API_KEY = os.environ.get("SEARCH_API_KEY", "")
+if not API_KEY:
+    sys.stderr.write(
+        "[search_mcp] 警告: 未设置环境变量 SEARCH_API_KEY，搜索功能将不可用。\n"
+        "请在 stepfun 开放平台获取 API Key 后: export SEARCH_API_KEY=your_key\n"
+    )
 # 真联网检索：走套餐 MCP 通道（消耗 Step Plan 月度 Credit，与套餐搜索次数统一计费）
 # 注意：不要用 https://api.stepfun.com/v1/search —— 那是标准付费接口，消耗充值余额而非套餐额度
 SEARCH_MCP_URL = os.environ.get("SEARCH_MCP_URL", "") or \
