@@ -13,14 +13,35 @@ import urllib.request
 from datetime import datetime, timezone, timedelta
 
 
+def _load_dotenv():
+    """从脚本上级目录的 .env 加载环境变量（纯标准库，无需 python-dotenv）。
+    已存在的环境变量优先，不被 .env 覆盖。.env 已被 .gitignore 忽略。"""
+    # search_mcp.py 在 engine/ 下，.env 在项目根目录（即 engine 的上一级）
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+    if not os.path.isfile(env_path):
+        return
+    with open(env_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key, val = key.strip(), val.strip().strip('"').strip("'")
+            if key and key not in os.environ:  # 已存在的环境变量优先
+                os.environ[key] = val
+
+
+_load_dotenv()
+
+
 # ---- 可配置项（全部读环境变量，密钥不写死在代码里）----
 # 用 `or` 兜底：当环境变量被显式设为空字符串时也回退到默认值
-# ⚠️ API Key 必须通过环境变量 SEARCH_API_KEY 提供，不设则搜索功能不可用
+# ⚠️ API Key 通过环境变量 SEARCH_API_KEY 或项目根目录 .env 提供，不设则搜索功能不可用
 API_KEY = os.environ.get("SEARCH_API_KEY", "")
 if not API_KEY:
     sys.stderr.write(
-        "[search_mcp] 警告: 未设置环境变量 SEARCH_API_KEY，搜索功能将不可用。\n"
-        "请在 stepfun 开放平台获取 API Key 后: export SEARCH_API_KEY=your_key\n"
+        "[search_mcp] 警告: 未设置 SEARCH_API_KEY，搜索功能将不可用。\n"
+        "请在项目根目录创建 .env（参考 .env.example）或设置环境变量。\n"
     )
 # 真联网检索：走套餐 MCP 通道（消耗 Step Plan 月度 Credit，与套餐搜索次数统一计费）
 # 注意：不要用 https://api.stepfun.com/v1/search —— 那是标准付费接口，消耗充值余额而非套餐额度
